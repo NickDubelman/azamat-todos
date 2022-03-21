@@ -8,17 +8,35 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+type User struct {
+	ID   int
+	Name string
+}
+
+var UserTable = azamat.Table[User]{
+	Name:    "users",
+	Columns: []string{"id", "name"},
+	RawSchema: `
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL
+	`,
+}
+
 type Todo struct {
-	ID    int
-	Title string
+	ID       int
+	Title    string
+	AuthorID int `db:"authorID"`
 }
 
 var TodoTable = azamat.Table[Todo]{
 	Name:    "todos",
-	Columns: []string{"id", "title"},
+	Columns: []string{"id", "title", "authorID"},
 	RawSchema: `
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		title TEXT NOT NULL
+		title TEXT NOT NULL,
+		authorID INTEGER NOT NULL,
+		
+		FOREIGN KEY (authorID) REFERENCES users(id)
 	`,
 }
 
@@ -29,14 +47,32 @@ func main() {
 		panic(err)
 	}
 
+	// Create users table
+	if err := UserTable.CreateIfNotExists(db); err != nil {
+		panic(err)
+	}
+
 	// Create todos table
 	if err := TodoTable.CreateIfNotExists(db); err != nil {
 		panic(err)
 	}
 
-	// Insert an entry
+	// Insert a user
+	userName := "Azamat"
+	insert := UserTable.Insert().Columns("name").Values(userName)
+	userID, err := insert.Run(db)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Inserted user: id=%d, name=%s\n", userID, userName)
+
+	// Insert a todo
 	todoTitle := "assist Borat"
-	insert := TodoTable.Insert().Columns("title").Values(todoTitle)
+	insert = TodoTable.
+		Insert().
+		Columns("title", "authorID").
+		Values(todoTitle, userID)
+
 	todoID, err := insert.Run(db)
 	if err != nil {
 		panic(err)
