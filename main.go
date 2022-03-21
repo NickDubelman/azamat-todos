@@ -48,7 +48,7 @@ func main() {
 
 	// Query all
 	query := TodoTable.Select()
-	todos, err := query.Run(db)
+	todos, err := query.All(db)
 	if err != nil {
 		panic(err)
 	}
@@ -56,17 +56,12 @@ func main() {
 
 	// Query by ID
 	query = TodoTable.Select().Where("id = ?", todoID)
-	todos, err = query.Run(db)
+	todo, err := query.Only(db)
 	if err != nil {
 		panic(err)
 	}
 
-	if len(todos) == 0 {
-		err := fmt.Errorf("could not find todo with id %d", todoID)
-		panic(err)
-	}
-
-	fmt.Println("Query by ID:", todos[0])
+	fmt.Println("Query by ID:", todo)
 
 	todoTitle = "no longer friends with borat"
 	update := TodoTable.Update().Set("title", todoTitle).Where("id = ?", todoID)
@@ -76,13 +71,8 @@ func main() {
 
 	fmt.Printf("Updated todo: id=%d, title=%s\n", todoID, todoTitle)
 
-	todos, err = query.Run(db)
+	todo, err = query.Only(db)
 	if err != nil {
-		panic(err)
-	}
-
-	if len(todos) == 0 {
-		err := fmt.Errorf("could not find todo with id %d", todoID)
 		panic(err)
 	}
 
