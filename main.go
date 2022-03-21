@@ -8,6 +8,20 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+type Todo struct {
+	ID    int
+	Title string
+}
+
+var TodoTable = azamat.Table[Todo]{
+	Name:    "todos",
+	Columns: []string{"id", "title"},
+	RawSchema: `
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		title TEXT NOT NULL
+	`,
+}
+
 func main() {
 	db, err := sqlx.Connect("sqlite3", ":memory:")
 	if err != nil {
@@ -15,25 +29,8 @@ func main() {
 	}
 
 	// Create todos table
-	createTable := `
-		CREATE TABLE todos (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			title TEXT NOT NULL
-		)
-	`
-
-	if _, err = db.Exec(createTable); err != nil {
+	if err := TodoTable.CreateIfNotExists(db); err != nil {
 		panic(err)
-	}
-
-	type Todo struct {
-		ID    int
-		Title string
-	}
-
-	TodoTable := azamat.Table[Todo]{
-		Name:    "todos",
-		Columns: []string{"id", "title"},
 	}
 
 	// Insert
