@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 
-	sq "github.com/Masterminds/squirrel"
 	"github.com/NickDubelman/azamat"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -27,31 +26,20 @@ func main() {
 		panic(err)
 	}
 
-	TodoTable := azamat.Table{
-		Name:    "todos",
-		Columns: []string{"id", "title"},
-	}
-
 	type Todo struct {
 		ID    int
 		Title string
 	}
 
-	fetchTodos := func(query sq.SelectBuilder) ([]Todo, error) {
-		sql, args, err := query.ToSql()
-		if err != nil {
-			return nil, err
-		}
-
-		var rows []Todo
-		err = db.Select(&rows, sql, args...)
-		return rows, err
+	TodoTable := azamat.Table[Todo]{
+		Name:    "todos",
+		Columns: []string{"id", "title"},
 	}
 
 	// Insert
 	todoTitle := "assist Borat"
 	insert := TodoTable.Insert().Columns("title").Values(todoTitle)
-	result, err := insert.RunWith(db).Exec()
+	result, err := insert.Run(db)
 	if err != nil {
 		panic(err)
 	}
@@ -60,7 +48,7 @@ func main() {
 
 	// Query all
 	query := TodoTable.Select()
-	todos, err := fetchTodos(query)
+	todos, err := query.Run(db)
 	if err != nil {
 		panic(err)
 	}
@@ -68,7 +56,7 @@ func main() {
 
 	// Query by ID
 	query = TodoTable.Select().Where("id = ?", todoID)
-	todos, err = fetchTodos(query)
+	todos, err = query.Run(db)
 	if err != nil {
 		panic(err)
 	}
@@ -82,13 +70,13 @@ func main() {
 
 	todoTitle = "no longer friends with borat"
 	update := TodoTable.Update().Set("title", todoTitle).Where("id = ?", todoID)
-	if _, err := update.RunWith(db).Exec(); err != nil {
+	if _, err := update.Run(db); err != nil {
 		panic(err)
 	}
 
 	fmt.Printf("Updated todo: id=%d, title=%s\n", todoID, todoTitle)
 
-	todos, err = fetchTodos(query)
+	todos, err = query.Run(db)
 	if err != nil {
 		panic(err)
 	}
@@ -101,7 +89,7 @@ func main() {
 	fmt.Println("Query by ID:", todos[0])
 
 	delete := TodoTable.Delete().Where("id = ?", todoID)
-	if _, err := delete.RunWith(db).Exec(); err != nil {
+	if _, err := delete.Run(db); err != nil {
 		panic(err)
 	}
 
