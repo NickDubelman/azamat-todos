@@ -47,16 +47,14 @@ func main() {
 	fmt.Printf("Inserted todo: id=%d, title=%s\n", todoID, todoTitle)
 
 	// Query all
-	query := TodoTable.Select()
-	todos, err := query.All(db)
+	todos, err := TodoTable.GetAll(db)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("Query all:", todos)
 
 	// Query by ID
-	query = TodoTable.Select().Where("id = ?", todoID)
-	todo, err := query.Only(db)
+	todo, err := TodoTable.GetByID(db, int(todoID))
 	if err != nil {
 		panic(err)
 	}
@@ -71,7 +69,7 @@ func main() {
 
 	fmt.Printf("Updated todo: id=%d, title=%s\n", todoID, todoTitle)
 
-	todo, err = query.Only(db)
+	todo, err = TodoTable.GetByID(db, int(todoID))
 	if err != nil {
 		panic(err)
 	}
