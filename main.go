@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/NickDubelman/azamat"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -25,10 +26,15 @@ var UserTable = azamat.Table[User]{
 type Todo struct {
 	ID       int
 	Title    string
+	Author   string
 	AuthorID int `db:"authorID"`
 }
 
-var TodoTable = azamat.Table[Todo]{
+var TodoTable = azamat.Table[struct {
+	ID       int
+	Title    string
+	AuthorID int `db:"authorID"`
+}]{
 	Name:    "todos",
 	Columns: []string{"id", "title", "authorID"},
 	RawSchema: `
@@ -38,6 +44,21 @@ var TodoTable = azamat.Table[Todo]{
 		
 		FOREIGN KEY (authorID) REFERENCES users(id)
 	`,
+}
+
+var TodoView = azamat.View[Todo]{
+	IDFrom: TodoTable,
+	Query: func() sq.SelectBuilder {
+		join := fmt.Sprintf(
+			"%s ON %s.id = %s.authorID",
+			UserTable, UserTable, TodoTable,
+		)
+
+		return TodoTable.
+			Select().
+			Columns("name AS author"). // include author name from UserTable
+			Join(join)
+	},
 }
 
 func main() {
@@ -79,15 +100,15 @@ func main() {
 	}
 	fmt.Printf("Inserted todo: id=%d, title=%s\n", todoID, todoTitle)
 
-	// Query all entries
-	todos, err := TodoTable.GetAll(db)
+	// Query all todos
+	todos, err := TodoView.GetAll(db)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("Query all:", todos)
 
-	// Query specific entry by ID
-	todo, err := TodoTable.GetByID(db, todoID)
+	// Query specific todo by ID
+	todo, err := TodoView.GetByID(db, todoID)
 	if err != nil {
 		panic(err)
 	}
@@ -104,14 +125,14 @@ func main() {
 	}
 	fmt.Printf("Updated todo: id=%d, title=%s\n", todoID, todoTitle)
 
-	// Query updated row by its ID
-	todo, err = TodoTable.GetByID(db, todoID)
+	// Query updated todo by its ID
+	todo, err = TodoView.GetByID(db, todoID)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("Query by ID:", todo)
 
-	// Delete entry by ID
+	// Delete todo by ID
 	delete := TodoTable.Delete().Where("id = ?", todoID)
 	if _, err := delete.Run(db); err != nil {
 		panic(err)
