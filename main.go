@@ -34,7 +34,7 @@ func main() {
 		panic(err)
 	}
 
-	// Insert
+	// Insert an entry
 	todoTitle := "assist Borat"
 	insert := TodoTable.Insert().Columns("title").Values(todoTitle)
 	todoID, err := insert.Run(db)
@@ -43,14 +43,14 @@ func main() {
 	}
 	fmt.Printf("Inserted todo: id=%d, title=%s\n", todoID, todoTitle)
 
-	// Query all
+	// Query all entries
 	todos, err := TodoTable.GetAll(db)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("Query all:", todos)
 
-	// Query by ID
+	// Query specific entry by ID
 	todo, err := TodoTable.GetByID(db, todoID)
 	if err != nil {
 		panic(err)
@@ -68,12 +68,14 @@ func main() {
 	}
 	fmt.Printf("Updated todo: id=%d, title=%s\n", todoID, todoTitle)
 
+	// Query updated row by its ID
 	todo, err = TodoTable.GetByID(db, todoID)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("Query by ID:", todo)
 
+	// Delete entry by ID
 	delete := TodoTable.Delete().Where("id = ?", todoID)
 	if _, err := delete.Run(db); err != nil {
 		panic(err)
