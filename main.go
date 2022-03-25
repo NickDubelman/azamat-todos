@@ -5,7 +5,6 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/NickDubelman/azamat"
-	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -83,7 +82,7 @@ var TodoView = azamat.View[Todo]{
 
 func main() {
 	// Connect to db
-	db, err := sqlx.Connect("sqlite3", ":memory:")
+	db, err := azamat.Connect("sqlite3", ":memory:")
 	if err != nil {
 		panic(err)
 	}
