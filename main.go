@@ -119,7 +119,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Inserted todo: id=%d, title=%s\n", todoID, todoTitle)
+	fmt.Printf(
+		"Inserted todo: id=%d, title=%s, authorID=%d\n",
+		todoID, todoTitle, userID,
+	)
 
 	// Query all users
 	users, err := UserTable.GetAll(db)
