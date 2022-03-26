@@ -182,4 +182,19 @@ func main() {
 		panic(err)
 	}
 	fmt.Println("Query all todos:", todos)
+
+	query := UserTable.Select().Where("name = ?", userName)
+	users, err = query.All(db)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Custom query (all):", users)
+
+	user, err = query.Only(db)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Custom query (only):", user)
 }
