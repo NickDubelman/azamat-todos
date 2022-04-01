@@ -101,7 +101,11 @@ func main() {
 	userName := "Azamat"
 
 	insert := UserTable.Insert().Columns("name").Values(userName)
-	userID, err := insert.Run(db)
+	res, err := insert.Run(db)
+	if err != nil {
+		panic(err)
+	}
+	userID, err := res.LastInsertId()
 	if err != nil {
 		panic(err)
 	}
@@ -115,7 +119,11 @@ func main() {
 		Columns("title", "authorID").
 		Values(todoTitle, userID)
 
-	todoID, err := insert.Run(db)
+	res, err = insert.Run(db)
+	if err != nil {
+		panic(err)
+	}
+	todoID, err := res.LastInsertId()
 	if err != nil {
 		panic(err)
 	}
@@ -139,14 +147,14 @@ func main() {
 	fmt.Println("Query all todos:", todos)
 
 	// Query specific user by ID
-	user, err := UserTable.GetByID(db, userID)
+	user, err := UserTable.GetByID(db, int(userID))
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("Query user by ID:", user)
 
 	// Query specific todo by ID
-	todo, err := TodoView.GetByID(db, todoID)
+	todo, err := TodoView.GetByID(db, int(todoID))
 	if err != nil {
 		panic(err)
 	}
@@ -164,7 +172,7 @@ func main() {
 	fmt.Printf("Updated todo: id=%d, title=%s\n", todoID, todoTitle)
 
 	// Query updated todo by its ID
-	todo, err = TodoView.GetByID(db, todoID)
+	todo, err = TodoView.GetByID(db, int(todoID))
 	if err != nil {
 		panic(err)
 	}
